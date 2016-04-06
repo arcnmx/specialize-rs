@@ -8,6 +8,10 @@ cache:
     directories:
         - $HOME/.cargo
         - target
+env:
+    global:
+        - secure: "rpuLSD23dz1USwDs4w54JWxEDF0hUu5EUkhvTmt+TNzJ4xhTWe0RLswujmUNViHUvr3X+fr7u3pou5CSmy97e1vxph37C7s7Q88t1OaHUyOMWzp2tiEgZqlaH+BGHEzHUqF/sy5WpG6WCcbk0pj1bFDxY6MguW7IJ1I0vaNPC/pbJTACFrQUGZqrReeyOj9vBLhjdBVgNHyl5ioN1b/woFS1CwOYybaBJT+9kO6z3yEG/NVsFaDzYqhgeOCEmewDYeFslJT2BUg4bu1FqoxT7rdgjfsksKew+RNBLZ3YxO14Bk5XqpHqEGu1bFh6YXJy1Wj0C81iUN0pI8PllvZ/MKkiX3D9+eEjuLdLQToGTnjm84gi2/UvT1RkksujVNWZIZWkzxkVDBo4sjWQzb8tgC0NTdH2QOkkhzTqpuMzQS1P7ZLXUytnv48BvDdfxRR3o3Mxe5IZLZpzCQr4VqLz5+JTo539WDnwuHoljThjF1M39H53vUFQc61b0kkKCyf2hK+T6CF+YjQlY4T51X8WXbj8iKQ4UFjzUtaoLsc2Pw7pzVtGHcbW2L/qq4UPY5c4wdnzSJOMpmH9/wPcyzr7ak4LI/QjIn6oIpeaqZ7udgHQCziz7TDtKTOJwEnw3n/q6TMbLtEkLhUlMS3ND6hJxHbfDeaZVLLbI36F/jIMJUo="
+        - secure: "G44VSJOa9pqx2C63/HOzFxbchtw5VqW6ZWSWyi9QQdq3pk3ulv2SIPDwXF6ls+8MsFXxgA6ndo2M5EMwhRkJzEv34F2EtImnF0bBcNDKdoRYRBOtygpMHUxzCDUqc3eYqk+K5EPN4ZPybgQqMcFChOey28gknp43BnYMTKKilEr0trp5rZeY+4sWNJQtkMZ/kmaOrIzg/bMy5KUYUWrITNRM9zppF/JmaJjPconglMvoJJ9W+LWByYandkPK7L7i/adGSpySdqvqbRwBaOEA3x3Qdi3PKwXCAKWfT1YCtmuhM2fvwLvyLqvhHjjLVwSNXAA6s+Wb2NTaOjlltOInEPK8wkMLtZZwuMrQawVVqhUdsjAMgVDfSU3SO9+e7p7oNbR/F+oGqRrC0UXbN72UcDGqT9hJBNGnWpJvK9FNjAtLWhDxx0XmCi8niDA/INi2iO77fhb4BKU2q0T7nUgtcNeZHYiCZvNON2k7tjsHvI/5qoFmDEDKdk5TGWA4P42S2NLGP0aUxzZCWvi54/DHRTkJ2DyvXeME/lk4K4Cj/rGHMW6lzSFQ01W92jLImfLS6ytrzN0ZCqXet1TcFEHnbDwmBuhP0Fqe9B7GKXUWSKbHAzlI29WAgFKfu0YIMqxkuxxRrDq5lFvIxm1X7jcRCJQh/X/MDH65DmKAhag9T7A="
 before_script:
     - curl -L https://github.com/arcnmx/ci/archive/master.tar.gz | tar -xzC $HOME && . $HOME/ci-master/src
 
