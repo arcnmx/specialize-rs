@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `specialize` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, specialize">
+
+    <title>specialize - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'></p><script>window.sidebarCurrent = {name: 'specialize', ty: 'mod', relpath: '../'};</script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>specialize</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-0' class='srclink' href='../src/specialize/src/lib.rs.html#1-503' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Experimental specialization macros.</p>
+
+<p>Syntax is highly volatile and subject to change. The use of these macros
+requires an unstable rust compiler and the <code>#![feature(specialization)]</code>
+crate attribute.</p>
+
+<h2 id='constrain' class='section-header'><a href='#constrain'>constrain!()</a></h2>
+<p><code>constrain!()</code> attempts to add additional trait bounds to a generic type.</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='ident'>Read</span>, <span class='ident'>Seek</span>, <span class='ident'>SeekFrom</span>, <span class='ident'>Cursor</span>, <span class='ident'>Repeat</span>};
+
+<span class='kw'>fn</span> <span class='ident'>generic_function</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Read</span><span class='op'>&gt;</span>(<span class='ident'>read</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>T</span>) {
+    <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Some</span>(<span class='ident'>read_seek</span>) <span class='op'>=</span> <span class='macro'>constrain</span><span class='macro'>!</span>(<span class='kw-2'>ref</span> <span class='kw-2'>mut</span> <span class='ident'>read</span> <span class='kw'>as</span> [<span class='ident'>IsReadSeek</span>: <span class='ident'>Read</span> <span class='op'>+</span> <span class='ident'>Seek</span>] <span class='op'>=</span> <span class='ident'>Cursor</span><span class='op'>&lt;</span><span class='ident'>Repeat</span><span class='op'>&gt;</span>) {
+        <span class='ident'>read_seek</span>.<span class='ident'>seek</span>(<span class='ident'>SeekFrom</span>::<span class='ident'>Start</span>(<span class='number'>0</span>));
+    }
+}</pre>
+
+<h3 id='caveats' class='section-header'><a href='#caveats'>Caveats</a></h3>
+<p>There are a few oddities in the above example...</p>
+
+<ol>
+<li>You must specify a name for the trait to be used behind the scenes for
+specialization, as in <code>IsReadSeek</code>. It may be called whatever you like.</li>
+<li>A default fallback type that implements the desired trait bounds must also
+be provided. This type must be concrete but will never be used or
+instantiated, and is only used to appease the type checker.</li>
+</ol>
+
+<h2 id='specialize--' class='section-header'><a href='#specialize--'>specialize! { }</a></h2>
+<p>Provides a type-level <code>match</code> statement with specialization bounds.</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='ident'>Read</span>, <span class='ident'>BufRead</span>, <span class='ident'>Write</span>, <span class='ident'>copy</span>, <span class='ident'>sink</span>};
+
+<span class='kw'>fn</span> <span class='ident'>generic_function</span><span class='op'>&lt;</span><span class='ident'>T</span>: <span class='ident'>Read</span><span class='op'>&gt;</span>(<span class='ident'>read</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>T</span>) {
+    <span class='macro'>specialize</span><span class='macro'>!</span> {
+        <span class='kw'>trait</span> <span class='kw'>fn</span> <span class='ident'>Trait</span>::<span class='ident'>nonsensical</span>[<span class='ident'>W</span>: <span class='ident'>Write</span>](<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>, <span class='ident'>w</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>W</span>) <span class='op'>-&gt;</span> <span class='ident'>bool</span> <span class='kw'>where</span> [<span class='ident'>W</span>: <span class='ident'>Write</span>];
+
+        <span class='kw'>match</span> <span class='kw'>impl</span>[<span class='lifetime'>&#39;a</span>, <span class='ident'>T</span>: <span class='ident'>Read</span>] <span class='kw'>for</span> <span class='ident'>T</span> <span class='kw'>where</span> [<span class='ident'>T</span>: <span class='ident'>Read</span>] {
+            <span class='kw'>where</span> [<span class='ident'>T</span>: <span class='ident'>BufRead</span>] <span class='op'>=&gt;</span> <span class='self'>self</span>.<span class='ident'>fill_buf</span>().<span class='ident'>and_then</span>(<span class='op'>|</span><span class='ident'>buf</span><span class='op'>|</span> <span class='ident'>w</span>.<span class='ident'>write</span>(<span class='ident'>buf</span>)).<span class='ident'>is_ok</span>(),
+            <span class='kw'>impl</span>[<span class='ident'>U</span>: <span class='ident'>Into</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span> <span class='op'>+</span> <span class='ident'>Clone</span>] <span class='kw'>where</span> [<span class='ident'>T</span>: <span class='ident'>BufRead</span> <span class='op'>+</span> <span class='ident'>Iterator</span><span class='op'>&lt;</span><span class='ident'>Item</span><span class='op'>=</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>U</span><span class='op'>&gt;</span>, <span class='ident'>U</span>: <span class='lifetime'>&#39;a</span>] <span class='op'>=&gt;</span>
+                <span class='ident'>w</span>.<span class='ident'>write</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>cloned</span>().<span class='ident'>map</span>(<span class='ident'>Into</span>::<span class='ident'>into</span>).<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;&gt;</span>()).<span class='ident'>is_ok</span>(),
+            _ <span class='op'>=&gt;</span> <span class='ident'>copy</span>(<span class='self'>self</span>, <span class='ident'>w</span>).<span class='ident'>is_ok</span>(),
+        }
+    }
+
+    <span class='ident'>Trait</span>::<span class='ident'>nonsensical</span>(<span class='ident'>read</span>, <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>sink</span>());
+}</pre>
+
+<h3 id='caveats-1' class='section-header'><a href='#caveats-1'>Caveats</a></h3>
+<ol>
+<li>This is not an inline statement or expression, and is instead used to
+generate a trait and method pair. This means the prototype must be specified
+up-front, and no variables will be automatically captured from the outside
+scope.</li>
+<li>Generic bounds and where clauses must be surrounded by <code>[]</code> rather than
+<code>&lt;&gt;</code> or similar due to macro parsing limitations.</li>
+<li>The specialization &quot;more specific&quot; rules must be followed in order to
+prevent conflicting trait impls.</li>
+<li>The various <code>where [B: Bounds...]</code> clauses may be omitted, and are mostly
+included here for syntax demonstration.</li>
+</ol>
+</div></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "specialize";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>
