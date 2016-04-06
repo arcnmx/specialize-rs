@@ -1,0 +1,14 @@
+[package]
+name = "specialize"
+version = "0.0.1"
+authors = ["arcnmx"]
+
+description = "Type specialization macros and helpers."
+documentation = "http://arcnmx.github.io/specialize-rs/specialize/"
+repository = "https://github.com/arcnmx/specialize-rs"
+readme = "README.md"
+keywords = ["specialization", "nightly", "macro", "type"]
+license = "MIT"
+
+[lib]
+path = "src/lib.rs"
