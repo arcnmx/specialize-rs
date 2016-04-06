@@ -14,5 +14,5 @@ See the [documentation][docs] for all provided macros and types.
 [cargo]: https://crates.io/crates/specialize
 [docs-badge]: https://img.shields.io/badge/API-docs-blue.svg?style=flat-square
 [docs]: http://arcnmx.github.io/specialize-rs/specialize/
-[license-badge]: https://img.shields.io/badge/license-MIT-lightgray.svg?style=flat-square
+[license-badge]: https://img.shields.io/badge/license-MIT-orange.svg?style=flat-square
 [license]: https://github.com/arcnmx/specialize-rs/blob/master/COPYING
