@@ -457,16 +457,24 @@ macro_rules! constrain {
         }
 
         impl<T: ?Sized> $trait_id for T {
+            #[inline(always)]
             default fn is() -> bool { false }
+            #[inline(always)]
             default fn move_(self) -> Option<$ty> where Self: Sized, $ty: Sized { None }
+            #[inline(always)]
             default fn as_ref(&self) -> Option<&$ty> { None }
+            #[inline(always)]
             default fn as_mut(&mut self) -> Option<&mut $ty> { None }
         }
 
         impl $trait_id for $ty {
+            #[inline(always)]
             default fn is() -> bool { true }
+            #[inline(always)]
             fn move_(self) -> Option<$ty> where Self: Sized, $ty: Sized { Some(self) }
+            #[inline(always)]
             fn as_ref(&self) -> Option<&$ty> { Some(self) }
+            #[inline(always)]
             fn as_mut(&mut self) -> Option<&mut $ty> { Some(self) }
         }
     };
@@ -484,9 +492,13 @@ macro_rules! constrain {
             impl<T: ?Sized + $($bounds)*> $trait_id for T {
                 type Out = T;
 
+                #[inline(always)]
                 fn is() -> bool { true }
+                #[inline(always)]
                 fn move_(self) -> Option<Self::Out> where Self: Sized, Self::Out: Sized { Some(self) }
+                #[inline(always)]
                 fn as_ref(&self) -> Option<&Self::Out> { Some(self) }
+                #[inline(always)]
                 fn as_mut(&mut self) -> Option<&mut Self::Out> { Some(self) }
             }
         }
@@ -494,9 +506,13 @@ macro_rules! constrain {
         impl<T: ?Sized> $trait_id for T {
             default type Out = $default_ty;
 
+            #[inline(always)]
             default fn is() -> bool { false }
+            #[inline(always)]
             default fn move_(self) -> Option<Self::Out> where Self: Sized, Self::Out: Sized { None }
+            #[inline(always)]
             default fn as_ref(&self) -> Option<&Self::Out> { None }
+            #[inline(always)]
             default fn as_mut(&mut self) -> Option<&mut Self::Out> { None }
         }
     };
@@ -507,11 +523,13 @@ macro_rules! constrain {
             }
 
             impl<T: ?Sized + $($bounds)*> $trait_id for T {
+                #[inline(always)]
                 fn is() -> bool { true }
             }
         }
 
         impl<T: ?Sized> $trait_id for T {
+            #[inline(always)]
             default fn is() -> bool { false }
         }
     };
