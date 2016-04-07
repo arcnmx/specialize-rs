@@ -16,16 +16,18 @@
  * # #[macro_use]
  * # extern crate specialize;
  * # fn main() { }
- * use std::io::{Read, Seek, SeekFrom, Cursor, Repeat};
+ * use std::io::{Write, Read, Seek, SeekFrom, Cursor, Repeat};
  *
  * fn generic_function<T: Read>(read: &mut T) {
  *     if let Some(read_seek) = constrain!(ref mut [read: Read + Seek] = Cursor<Repeat>) {
  *         read_seek.seek(SeekFrom::Start(0));
+ *     } else if constrain!(type [T: Write]) {
+ *         // ...
  *     }
  * }
  * ```
  * 
- * ### Caveats
+ * ### Caveats and Notes
  *
  * There are a few oddities in the above example...
  *
@@ -34,6 +36,27 @@
  * 2. A default fallback type that implements the desired trait bounds must also
  *    be provided. This type must be concrete but will never be used or
  *    instantiated, and is only used to appease the type checker.
+ * 3. The `ref` and `mut` keywords may be left out in order to move or immutably
+ *    borrow the value.
+ * 4. The `read` value part may be an expression if surrounded in parenthesis.
+ *
+ * ### Concrete constrain!()
+ *
+ * ```
+ * # #![feature(specialization)]
+ * # #[macro_use]
+ * # extern crate specialize;
+ * # fn main() { }
+ * fn generic_function<T: ?Sized>(value: &T) -> bool {
+ *     if let Some(value_bool) = constrain!(ref value as bool) {
+ *         *value_bool
+ *     } else if constrain!(type T as i32) {
+ *         true
+ *     } else {
+ *         false
+ *     }
+ * }
+ * ```
  *
  * ## specialize! { }
  *
@@ -379,6 +402,13 @@ macro_rules! constrain {
             constrain! { @expr __ConstrainBounds__::as_ref($value_id) }
         }
     };
+    (type [$value_id:tt : $($bounds:tt)*]) => {
+        {
+            constrain! { @trait __ConstrainBounds__ ($($bounds)*) }
+
+            constrain! { @expr <$value_id as __ConstrainBounds__>::is() }
+        }
+    };
     ([$value_id:tt : $($bounds:tt)*] = $default_ty:ty) => {
         {
             constrain! { @trait __ConstrainBounds__ ($($bounds)*) ($default_ty) }
@@ -405,6 +435,13 @@ macro_rules! constrain {
             constrain! { @trait_concrete __ConstrainEq__ ($ty_eq) }
 
             constrain! { @expr <$ty as __ConstrainEq__>::is() }
+        }
+    };
+    ($value_id:tt as $ty:ty) => {
+        {
+            constrain! { @trait_concrete __ConstrainEq__ ($ty) }
+
+            constrain! { @expr __ConstrainEq__::move_($value_id) }
         }
     };
     (@trait_concrete $trait_id:ident ($ty:ty)) => {
@@ -434,6 +471,7 @@ macro_rules! constrain {
             trait $trait_id {
                 type Out: ?Sized + $($bounds)*;
 
+                fn is() -> bool;
                 fn move_(self) -> Option<Self::Out> where Self: Sized, Self::Out: Sized;
                 fn as_ref(&self) -> Option<&Self::Out>;
                 fn as_mut(&mut self) -> Option<&mut Self::Out>;
@@ -442,6 +480,7 @@ macro_rules! constrain {
             impl<T: ?Sized + $($bounds)*> $trait_id for T {
                 type Out = T;
 
+                fn is() -> bool { true }
                 fn move_(self) -> Option<Self::Out> where Self: Sized, Self::Out: Sized { Some(self) }
                 fn as_ref(&self) -> Option<&Self::Out> { Some(self) }
                 fn as_mut(&mut self) -> Option<&mut Self::Out> { Some(self) }
@@ -451,9 +490,25 @@ macro_rules! constrain {
         impl<T: ?Sized> $trait_id for T {
             default type Out = $default_ty;
 
+            default fn is() -> bool { false }
             default fn move_(self) -> Option<Self::Out> where Self: Sized, Self::Out: Sized { None }
             default fn as_ref(&self) -> Option<&Self::Out> { None }
             default fn as_mut(&mut self) -> Option<&mut Self::Out> { None }
+        }
+    };
+    (@trait $trait_id:ident ($($bounds:tt)*)) => {
+        constrain! { @items
+            trait $trait_id {
+                fn is() -> bool;
+            }
+
+            impl<T: ?Sized + $($bounds)*> $trait_id for T {
+                fn is() -> bool { true }
+            }
+        }
+
+        impl<T: ?Sized> $trait_id for T {
+            default fn is() -> bool { false }
         }
     };
     (@items $($i:item)*) => { $($i)* };
