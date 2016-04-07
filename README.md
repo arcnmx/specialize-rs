@@ -6,7 +6,35 @@
 
 ## [Documentation][docs]
 
-See the [documentation][docs] for all provided macros and types.
+See the [documentation][docs] for all provided macros and types, and more
+up-to-date syntax and information.
+
+## Constrain
+
+The `constrain!()` macro can be used to add additional type bounds to an existing
+generic parameter. For example, imagine you want to print out the debug representation
+of a type without adding it to your generic bounds:
+
+```rust
+#[macro_use]
+extern crate specialize;
+
+fn some_func<T: SomeTrait>(t: &T) {
+    if let Some(debug) = constrain!(ref [t: Debug] = ()) {
+        println!("some_func({:?})", debug);
+    }
+    t.something();
+}
+```
+
+It can also be used as a replacement for `Any`, allowing a generic type to become
+its matching concrete type again.
+
+## Specialize
+
+The `specialize! { }` macro allows for more advanced matching of types, but is
+more cumbersome due to its syntax and implementation of an external function.
+See the documentation for more details.
 
 [travis-badge]: https://img.shields.io/travis/arcnmx/specialize-rs/master.svg?style=flat-square
 [travis]: https://travis-ci.org/arcnmx/specialize-rs
