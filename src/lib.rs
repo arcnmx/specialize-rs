@@ -19,7 +19,7 @@
  * use std::io::{Read, Seek, SeekFrom, Cursor, Repeat};
  *
  * fn generic_function<T: Read>(read: &mut T) {
- *     if let Some(read_seek) = constrain!(ref mut read as [IsReadSeek: Read + Seek] = Cursor<Repeat>) {
+ *     if let Some(read_seek) = constrain!(ref mut [read: Read + Seek] = Cursor<Repeat>) {
  *         read_seek.seek(SeekFrom::Start(0));
  *     }
  * }
@@ -358,18 +358,75 @@ macro_rules! specialize {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! constrain {
-    (ref mut $value_id:ident as [$trait_id:ident : $($bounds:tt)*] = $default_ty:ty) => {
+    (ref mut [$value_id:tt : $($bounds:tt)*] = $default_ty:ty) => {
         {
-            constrain! { @trait $trait_id ($($bounds)*) ($default_ty) }
+            constrain! { @trait __ConstrainBounds__ ($($bounds)*) ($default_ty) }
 
-            $trait_id::as_mut($value_id)
+            constrain! { @expr __ConstrainBounds__::as_mut($value_id) }
         }
     };
-    (ref $value_id:ident as [$trait_id:ident : $($bounds:tt)*] = $default_ty:ty) => {
+    (ref [$value_id:tt : $($bounds:tt)*] = $default_ty:ty) => {
         {
-            constrain! { @trait $trait_id ($($bounds)*) ($default_ty) }
+            constrain! { @trait __ConstrainBounds__ ($($bounds)*) ($default_ty) }
 
-            $trait_id::as_ref($value_id)
+            constrain! { @expr __ConstrainBounds__::as_ref($value_id) }
+        }
+    };
+    (ref [$value_id:tt : $($bounds:tt)*] = $default_ty:ty) => {
+        {
+            constrain! { @trait __ConstrainBounds__ ($($bounds)*) ($default_ty) }
+
+            constrain! { @expr __ConstrainBounds__::as_ref($value_id) }
+        }
+    };
+    ([$value_id:tt : $($bounds:tt)*] = $default_ty:ty) => {
+        {
+            constrain! { @trait __ConstrainBounds__ ($($bounds)*) ($default_ty) }
+
+            constrain! { @expr __ConstrainBounds__::move_($value_id) }
+        }
+    };
+    (ref mut $value_id:tt as $ty:ty) => {
+        {
+            constrain! { @trait_concrete __ConstrainEq__ ($ty) }
+
+            constrain! { @expr __ConstrainEq__::as_mut($value_id) }
+        }
+    };
+    (ref $value_id:tt as $ty:ty) => {
+        {
+            constrain! { @trait_concrete __ConstrainEq__ ($ty) }
+
+            constrain! { @expr __ConstrainEq__::as_ref($value_id) }
+        }
+    };
+    (type $ty:ty as $ty_eq:ty) => {
+        {
+            constrain! { @trait_concrete __ConstrainEq__ ($ty_eq) }
+
+            constrain! { @expr <$ty as __ConstrainEq__>::is() }
+        }
+    };
+    (@trait_concrete $trait_id:ident ($ty:ty)) => {
+        trait $trait_id {
+            fn is() -> bool;
+            fn move_(self) -> Option<$ty> where Self: Sized, $ty: Sized;
+            fn as_ref(&self) -> Option<&$ty>;
+            fn as_mut(&mut self) -> Option<&mut $ty>;
+        }
+
+        impl<T: ?Sized> $trait_id for T {
+            default fn is() -> bool { false }
+            default fn move_(self) -> Option<$ty> where Self: Sized, $ty: Sized { None }
+            default fn as_ref(&self) -> Option<&$ty> { None }
+            default fn as_mut(&mut self) -> Option<&mut $ty> { None }
+        }
+
+        impl $trait_id for $ty {
+            default fn is() -> bool { true }
+            fn move_(self) -> Option<$ty> where Self: Sized, $ty: Sized { Some(self) }
+            fn as_ref(&self) -> Option<&$ty> { Some(self) }
+            fn as_mut(&mut self) -> Option<&mut $ty> { Some(self) }
         }
     };
     (@trait $trait_id:ident ($($bounds:tt)*) ($default_ty:ty)) => {
@@ -377,6 +434,7 @@ macro_rules! constrain {
             trait $trait_id {
                 type Out: ?Sized + $($bounds)*;
 
+                fn move_(self) -> Option<Self::Out> where Self: Sized, Self::Out: Sized;
                 fn as_ref(&self) -> Option<&Self::Out>;
                 fn as_mut(&mut self) -> Option<&mut Self::Out>;
             }
@@ -384,6 +442,7 @@ macro_rules! constrain {
             impl<T: ?Sized + $($bounds)*> $trait_id for T {
                 type Out = T;
 
+                fn move_(self) -> Option<Self::Out> where Self: Sized, Self::Out: Sized { Some(self) }
                 fn as_ref(&self) -> Option<&Self::Out> { Some(self) }
                 fn as_mut(&mut self) -> Option<&mut Self::Out> { Some(self) }
             }
@@ -392,11 +451,13 @@ macro_rules! constrain {
         impl<T: ?Sized> $trait_id for T {
             default type Out = $default_ty;
 
+            default fn move_(self) -> Option<Self::Out> where Self: Sized, Self::Out: Sized { None }
             default fn as_ref(&self) -> Option<&Self::Out> { None }
             default fn as_mut(&mut self) -> Option<&mut Self::Out> { None }
         }
     };
     (@items $($i:item)*) => { $($i)* };
+    (@expr $i:expr) => { $i };
 }
 
 #[cfg(test)]
@@ -473,7 +534,7 @@ mod test {
         use std::fmt::Display;
 
         fn is_display<T: ?Sized>(t: &T) -> bool {
-            if let Some(display) = constrain!(ref t as [IsDisplay: Display] = u8) {
+            if let Some(display) = constrain!(ref [t: Display] = u8) {
                 println!("{}", display);
                 true
             } else {
@@ -490,7 +551,7 @@ mod test {
         use std::io::{Write, Stdout, sink};
 
         fn try_write<T: ?Sized>(t: &mut T) -> bool {
-            if let Some(write) = constrain!(ref mut t as [IsWrite: Write] = Stdout) {
+            if let Some(write) = constrain!(ref mut [t: Write] = Stdout) {
                 writeln!(write, "hello!").is_ok()
             } else {
                 false
@@ -499,5 +560,27 @@ mod test {
 
         assert_eq!(try_write(&mut ()), false);
         assert_eq!(try_write(&mut sink()), true);
+    }
+
+    #[test]
+    fn constrain_eq() {
+        fn is_bool<T: ?Sized>() -> bool {
+            constrain!(type T as bool)
+        }
+
+        assert!(is_bool::<bool>());
+        assert!(!is_bool::<&bool>());
+        assert!(!is_bool::<u8>());
+        assert!(constrain!(type bool as bool));
+    }
+
+    #[test]
+    fn constrain_eq_value() {
+        fn is_bool<T: ?Sized>(v: &T) -> bool {
+            constrain!(ref v as bool).is_some()
+        }
+
+        assert!(is_bool(&true));
+        assert!(!is_bool(&0u8));
     }
 }
