@@ -42,6 +42,10 @@
  *
  * ### Concrete constrain!()
  *
+ * `constrain!()` can also be used to convert a generic type into a concrete type.
+ * Similar to `Any::downcast_ref`, but enforced at compile time and without
+ * requiring the `Any` or `Reflect` trait bounds.
+ *
  * ```
  * # #![feature(specialization)]
  * # #[macro_use]
