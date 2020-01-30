@@ -307,6 +307,7 @@ macro_rules! specialize {
             ($trait_fn_id ($trait_fn_ty) ($($trait_fn_bounds)*) ($($trait_fn_where)*) ($($trait_fn_args)*))
             ($($items)*
                 impl<$($trait_impl_bounds)*, $($clause_bounds)*> $trait_id for $trait_impl_id where $($clause_where)* $($trait_impl_where)* {
+                    #[allow(unused_mut, unused_variables)]
                     default fn $trait_fn_id<
                         $($trait_fn_bounds)*
                     >($($trait_fn_args)*) -> $trait_fn_ty
@@ -338,6 +339,7 @@ macro_rules! specialize {
     ) => {
         specialize! { @items
             trait $trait_id {
+                #[allow(patterns_in_fns_without_body)]
                 fn $trait_fn_id<
                     $($trait_fn_bounds)*
                 >($($trait_fn_args)*) -> $trait_fn_ty
