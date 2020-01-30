@@ -190,7 +190,7 @@ macro_rules! specialize {
     (@parse_impl $trait_id:ident $trait_fn:tt
         match impl[
             $($trait_impl_bounds:tt)*
-        ] for $trait_impl_id:ident where [
+        ] for $trait_impl_id:ty where [
             $($trait_impl_where:tt)+
         ] {
             $($unparsed:tt)*
@@ -198,7 +198,7 @@ macro_rules! specialize {
     ) => {
         specialize! {
             @parse
-            ($trait_id $trait_impl_id ($($trait_impl_bounds)*) (, $($trait_impl_where)+))
+            ($trait_id ($trait_impl_id) ($($trait_impl_bounds)*) (, $($trait_impl_where)+))
             $trait_fn
             ()
             ($($unparsed)*)
@@ -207,13 +207,13 @@ macro_rules! specialize {
     (@parse_impl $trait_id:ident $trait_fn:tt
         match impl[
             $($trait_impl_bounds:tt)*
-        ] for $trait_impl_id:ident {
+        ] for $trait_impl_id:ty {
             $($unparsed:tt)*
         }
     ) => {
         specialize! {
             @parse
-            ($trait_id $trait_impl_id ($($trait_impl_bounds)*) ())
+            ($trait_id ($trait_impl_id) ($($trait_impl_bounds)*) ())
             $trait_fn
             ()
             ($($unparsed)*)
@@ -297,13 +297,13 @@ macro_rules! specialize {
     };
     // Clause to trait impl
     (@itemize
-        ($trait_id:ident $trait_impl_id:ident ($($trait_impl_bounds:tt)*) ($($trait_impl_where:tt)*))
+        ($trait_id:ident ($trait_impl_id:ty) ($($trait_impl_bounds:tt)*) ($($trait_impl_where:tt)*))
         ($trait_fn_id:ident ($trait_fn_ty:ty) ($($trait_fn_bounds:tt)*) ($($trait_fn_where:tt)*) ($($trait_fn_args:tt)*))
         ($($items:tt)*)
         ((($($clause_bounds:tt)*) ($($clause_where:tt)*) $clause_expr:expr) $($clauses:tt)*)
     ) => {
         specialize! { @itemize
-            ($trait_id $trait_impl_id ($($trait_impl_bounds)*) ($($trait_impl_where)*))
+            ($trait_id ($trait_impl_id) ($($trait_impl_bounds)*) ($($trait_impl_where)*))
             ($trait_fn_id ($trait_fn_ty) ($($trait_fn_bounds)*) ($($trait_fn_where)*) ($($trait_fn_args)*))
             ($($items)*
                 impl<$($trait_impl_bounds)*, $($clause_bounds)*> $trait_id for $trait_impl_id where $($clause_where)* $($trait_impl_where)* {
@@ -333,7 +333,7 @@ macro_rules! specialize {
         specialize! { @items $($items)* }
     };
     (@trait
-        ($trait_id:ident $trait_impl_id:ident ($($trait_impl_bounds:tt)*) ($($trait_impl_where:tt)*))
+        ($trait_id:ident ($trait_impl_id:ty) ($($trait_impl_bounds:tt)*) ($($trait_impl_where:tt)*))
         ($trait_fn_id:ident ($trait_fn_ty:ty) ($($trait_fn_bounds:tt)*) ($($trait_fn_where:tt)*) ($($trait_fn_args:tt)*))
     ) => {
         specialize! { @items
@@ -346,14 +346,14 @@ macro_rules! specialize {
         }
     };
     /*(@
-        ($trait_id:ident $trait_impl_id:ident ($($trait_impl_bounds:tt)*) ($($trait_impl_where:tt)*))
+        ($trait_id:ident ($trait_impl_id:ty) ($($trait_impl_bounds:tt)*) ($($trait_impl_where:tt)*))
         ($trait_fn_id:ident ($trait_fn_ty:ty) ($($trait_fn_bounds:tt)*) ($($trait_fn_where:tt)*) ($($trait_fn_args:tt)*))
         ($($items:tt)*)
         ($($clauses:tt)*)
         ($($unparsed:tt)*)
     ) => {
         specialize! { @
-            ($trait_id $trait_impl_id ($($trait_impl_bounds)*) ($($trait_impl_where)*))
+            ($trait_id ($trait_impl_id) ($($trait_impl_bounds)*) ($($trait_impl_where)*))
             ($trait_fn_id ($trait_fn_ty) ($($trait_fn_bounds)*) ($($trait_fn_where)*) ($($trait_fn_args)*))
             ($($items:tt)*)
             ($($clauses:tt)*)
